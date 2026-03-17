@@ -184,17 +184,24 @@ function SwipeCard(p){
   var pet=p.pet,onSwipe=p.onSwipe,isTop=p.isTop;
   var os=US({x:0,y:0}),off=os[0],setOff=os[1];
   var g=UR({on:false,dir:null,sx:0,sy:0});
+  var cardRef=UR(null);
   var hS=function(cx,cy){if(!isTop)return;g.current={on:true,dir:null,sx:cx,sy:cy}};
-  var hM=function(cx,cy,ev){if(!g.current.on)return;var dx=cx-g.current.sx,dy=cy-g.current.sy;
+  var hM=function(cx,cy){if(!g.current.on)return;var dx=cx-g.current.sx,dy=cy-g.current.sy;
     if(!g.current.dir&&(Math.abs(dx)>8||Math.abs(dy)>8))g.current.dir=Math.abs(dx)>Math.abs(dy)?"h":"v";
-    if(g.current.dir==="h"){if(ev&&ev.cancelable)ev.preventDefault();setOff({x:dx,y:dy*.3})}};
+    if(g.current.dir==="h"){setOff({x:dx,y:dy*.3})}};
   var hE=function(){if(!g.current.on)return;g.current.on=false;
     if(g.current.dir==="h"){if(off.x>110){onSwipe("right");return}if(off.x<-110){onSwipe("left");return}}
     setOff({x:0,y:0});g.current.dir=null};
+  UE(function(){
+    var el=cardRef.current;if(!el)return;
+    var onTM=function(e){if(g.current.on&&g.current.dir!=="v"&&e.cancelable)e.preventDefault();};
+    el.addEventListener("touchmove",onTM,{passive:false});
+    return function(){el.removeEventListener("touchmove",onTM,{passive:false});};
+  },[]);
   var rot=off.x*.065,lO=Math.min(1,Math.max(0,off.x/110)),nO=Math.min(1,Math.max(0,-off.x/110));
   var sh=(pet.location||"").replace(/(?:ABQ|Albuquerque)\s*Animal\s*Welfare\s*(?:Department)?\s*-?\s*/gi,"");
-  return h("div",{onMouseDown:function(e){hS(e.clientX,e.clientY)},onMouseMove:function(e){hM(e.clientX,e.clientY,e)},onMouseUp:hE,onMouseLeave:function(){g.current.on&&hE()},
-    onTouchStart:function(e){hS(e.touches[0].clientX,e.touches[0].clientY)},onTouchMove:function(e){hM(e.touches[0].clientX,e.touches[0].clientY,e)},onTouchEnd:hE,
+  return h("div",{ref:cardRef,onMouseDown:function(e){hS(e.clientX,e.clientY)},onMouseMove:function(e){hM(e.clientX,e.clientY)},onMouseUp:hE,onMouseLeave:function(){g.current.on&&hE()},
+    onTouchStart:function(e){hS(e.touches[0].clientX,e.touches[0].clientY)},onTouchMove:function(e){hM(e.touches[0].clientX,e.touches[0].clientY)},onTouchEnd:hE,
     style:{position:"absolute",width:"calc(100% - 32px)",maxWidth:400,height:"100%",borderRadius:16,overflow:"hidden",background:C.card,
       boxShadow:isTop?"0 8px 36px rgba(0,0,0,.1),0 0 0 .33px rgba(0,0,0,.08)":"0 4px 16px rgba(0,0,0,.05)",
       transform:"translate("+off.x+"px,"+off.y+"px) rotate("+rot+"deg) scale("+(isTop?1:.96)+")",
