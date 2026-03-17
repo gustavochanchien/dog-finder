@@ -182,30 +182,46 @@ function BreedTraits(p){
 
 function SwipeCard(p){
   var pet=p.pet,onSwipe=p.onSwipe,isTop=p.isTop;
-  var os=US({x:0,y:0}),off=os[0],setOff=os[1];
-  var g=UR({on:false,dir:null,sx:0,sy:0});
+  var g=UR({on:false,dir:null,sx:0,sy:0,dx:0,dy:0,lx:0,lt:0,vx:0});
   var cardRef=UR(null);
-  var hS=function(cx,cy){if(!isTop)return;g.current={on:true,dir:null,sx:cx,sy:cy}};
+  var applyDrag=function(x,y){
+    var el=cardRef.current;if(!el)return;
+    el.style.transform="translate("+x+"px,"+y+"px) rotate("+(x*.065)+"deg) scale(1)";
+    var lEl=el.querySelector(".swipe-love"),nEl=el.querySelector(".swipe-nope");
+    if(lEl)lEl.style.opacity=Math.min(1,Math.max(0,x/110));
+    if(nEl)nEl.style.opacity=Math.min(1,Math.max(0,-x/110));};
+  var hS=function(cx,cy){if(!isTop)return;
+    g.current={on:true,dir:null,sx:cx,sy:cy,dx:0,dy:0,lx:cx,lt:Date.now(),vx:0};
+    var el=cardRef.current;if(el){el.style.transition="none";el.style.cursor="grabbing";}};
   var hM=function(cx,cy){if(!g.current.on)return;var dx=cx-g.current.sx,dy=cy-g.current.sy;
     if(!g.current.dir&&(Math.abs(dx)>8||Math.abs(dy)>8))g.current.dir=Math.abs(dx)>Math.abs(dy)?"h":"v";
-    if(g.current.dir==="h"){setOff({x:dx,y:dy*.3})}};
+    if(g.current.dir==="h"){var now=Date.now(),dt=now-g.current.lt;
+      if(dt>0)g.current.vx=(cx-g.current.lx)/dt;
+      g.current.lx=cx;g.current.lt=now;g.current.dx=dx;g.current.dy=dy;applyDrag(dx,dy*.3);}};
   var hE=function(){if(!g.current.on)return;g.current.on=false;
-    if(g.current.dir==="h"){if(off.x>110){onSwipe("right");return}if(off.x<-110){onSwipe("left");return}}
-    setOff({x:0,y:0});g.current.dir=null};
+    var dx=g.current.dx,vx=g.current.vx,el=cardRef.current;
+    if(el)el.style.cursor=isTop?"grab":"default";
+    if(g.current.dir==="h"){
+      var goR=dx>110||(vx>0.5&&dx>20),goL=dx<-110||(vx<-0.5&&dx<-20);
+      if(goR){if(el){el.style.transition="transform .3s ease-out";el.style.transform="translate("+Math.max(600,window.innerWidth*1.3)+"px,"+(g.current.dy*.3)+"px) rotate(30deg) scale(1)";}setTimeout(function(){onSwipe("right");},280);return;}
+      if(goL){if(el){el.style.transition="transform .3s ease-out";el.style.transform="translate(-"+Math.max(600,window.innerWidth*1.3)+"px,"+(g.current.dy*.3)+"px) rotate(-30deg) scale(1)";}setTimeout(function(){onSwipe("left");},280);return;}}
+    if(el){el.style.transition="transform .45s cubic-bezier(.32,.72,.24,1.02)";el.style.transform="translate(0px,0px) rotate(0deg) scale(1)";}
+    var lEl=el&&el.querySelector(".swipe-love"),nEl=el&&el.querySelector(".swipe-nope");
+    if(lEl)lEl.style.opacity=0;if(nEl)nEl.style.opacity=0;
+    g.current.dir=null;};
   UE(function(){
     var el=cardRef.current;if(!el)return;
-    var onTM=function(e){if(g.current.on&&g.current.dir!=="v"&&e.cancelable)e.preventDefault();};
+    var onTM=function(e){if(g.current.on&&g.current.dir==="h"&&e.cancelable)e.preventDefault();};
     el.addEventListener("touchmove",onTM,{passive:false});
     return function(){el.removeEventListener("touchmove",onTM,{passive:false});};
   },[]);
-  var rot=off.x*.065,lO=Math.min(1,Math.max(0,off.x/110)),nO=Math.min(1,Math.max(0,-off.x/110));
   var sh=(pet.location||"").replace(/(?:ABQ|Albuquerque)\s*Animal\s*Welfare\s*(?:Department)?\s*-?\s*/gi,"");
   return h("div",{ref:cardRef,onMouseDown:function(e){hS(e.clientX,e.clientY)},onMouseMove:function(e){hM(e.clientX,e.clientY)},onMouseUp:hE,onMouseLeave:function(){g.current.on&&hE()},
     onTouchStart:function(e){hS(e.touches[0].clientX,e.touches[0].clientY)},onTouchMove:function(e){hM(e.touches[0].clientX,e.touches[0].clientY)},onTouchEnd:hE,
     style:{position:"absolute",width:"calc(100% - 32px)",maxWidth:400,height:"100%",borderRadius:16,overflow:"hidden",background:C.card,
       boxShadow:isTop?"0 8px 36px rgba(0,0,0,.1),0 0 0 .33px rgba(0,0,0,.08)":"0 4px 16px rgba(0,0,0,.05)",
-      transform:"translate("+off.x+"px,"+off.y+"px) rotate("+rot+"deg) scale("+(isTop?1:.96)+")",
-      transition:g.current.on?"none":"transform .5s cubic-bezier(.32,.72,.24,1.02)",cursor:isTop?"grab":"default",userSelect:"none",WebkitUserSelect:"none",zIndex:isTop?10:5}},
+      transform:"translate(0px,0px) rotate(0deg) scale("+(isTop?1:.96)+")",
+      transition:"transform .5s cubic-bezier(.32,.72,.24,1.02)",cursor:isTop?"grab":"default",userSelect:"none",WebkitUserSelect:"none",willChange:"transform",zIndex:isTop?10:5}},
     h("div",{className:"card-scroll",style:{width:"100%",height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}},
       h("div",{style:{position:"relative",width:"100%",minHeight:"65%"}},
         h(PetPhoto,{pet:pet,style:{width:"100%",height:0,paddingBottom:"90%",background:C.g6}}),
@@ -218,8 +234,8 @@ function SwipeCard(p){
             pet.age&&h("span",{style:{background:"rgba(0,0,0,.4)",backdropFilter:"blur(8px)",color:"#fff",fontSize:12,fontWeight:600,padding:"3px 8px",borderRadius:8}},pet.age),
             pet.weight&&h("span",{style:{background:"rgba(0,0,0,.4)",backdropFilter:"blur(8px)",color:"#fff",fontSize:12,fontWeight:600,padding:"3px 8px",borderRadius:8}},pet.weight),
             sh&&h("span",{style:{background:"rgba(0,0,0,.4)",backdropFilter:"blur(8px)",color:"#fff",fontSize:12,fontWeight:600,padding:"3px 8px",borderRadius:8,maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:3}},h(Ico,{n:"pin",sz:11,fill:"#fff"}),sh))),
-        h("div",{style:{position:"absolute",top:36,left:18,padding:"5px 14px",border:"3px solid "+C.green,borderRadius:8,color:C.green,fontSize:26,fontWeight:800,transform:"rotate(-15deg)",opacity:lO,letterSpacing:2,zIndex:4}},"LOVE"),
-        h("div",{style:{position:"absolute",top:36,right:18,padding:"5px 14px",border:"3px solid "+C.red,borderRadius:8,color:C.red,fontSize:26,fontWeight:800,transform:"rotate(15deg)",opacity:nO,letterSpacing:2,zIndex:4}},"NOPE"),
+        h("div",{className:"swipe-love",style:{position:"absolute",top:36,left:18,padding:"5px 14px",border:"3px solid "+C.green,borderRadius:8,color:C.green,fontSize:26,fontWeight:800,transform:"rotate(-15deg)",opacity:0,letterSpacing:2,zIndex:4,pointerEvents:"none"}},"LOVE"),
+        h("div",{className:"swipe-nope",style:{position:"absolute",top:36,right:18,padding:"5px 14px",border:"3px solid "+C.red,borderRadius:8,color:C.red,fontSize:26,fontWeight:800,transform:"rotate(15deg)",opacity:0,letterSpacing:2,zIndex:4,pointerEvents:"none"}},"NOPE"),
         pet._isNew&&h("div",{style:{position:"absolute",top:14,right:14,background:C.orange,color:"#fff",padding:"3px 10px",borderRadius:12,fontSize:11,fontWeight:700,zIndex:4}},"NEW")),
       h("div",{style:{background:C.card,minHeight:"35%"}},
         h("div",{style:{display:"flex",justifyContent:"center",padding:"8px 0 4px"}},h("div",{style:{width:36,height:5,borderRadius:3,background:C.g4}})),
