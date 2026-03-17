@@ -14,6 +14,7 @@ body.dark{--bg:#000;--card:#1C1C1E;--label:#fff;--sl:rgba(235,235,245,.6);--sep:
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{height:-webkit-fill-available}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif;background:var(--bg);color:var(--label);-webkit-font-smoothing:antialiased;overscroll-behavior:none;overflow-x:hidden;user-select:none;-webkit-user-select:none;min-height:100vh;min-height:-webkit-fill-available}
+.swipe-wrap{height:100vh;height:100dvh;min-height:100vh;min-height:100dvh}
 @media all and (display-mode:standalone){body{padding-top:env(safe-area-inset-top,0)}}
 .ios-spinner{width:22px;height:22px;border:2.5px solid var(--g5);border-top-color:var(--gray);border-radius:50%;animation:spin .75s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -447,7 +448,7 @@ function App(){
   var liked=0,adopted=0,noped=0;for(var k2 in sw){var s2=sw[k2];if(s2.direction==="right"&&!s2.gone)liked++;else if(s2.direction==="right"&&s2.gone)adopted++;else if(s2.direction==="left")noped++}
 
   return h(F,null,
-    h("div",{style:{height:page==="swipe"?"100vh":"auto",minHeight:"100vh",maxWidth:500,margin:"0 auto",paddingBottom:52,background:C.bg,display:page==="swipe"?"flex":"block",flexDirection:"column",overflow:page==="swipe"?"hidden":"visible"}},
+    h("div",{className:page==="swipe"?"swipe-wrap":undefined,style:{height:page==="swipe"?undefined:"auto",minHeight:page==="swipe"?undefined:"100vh",maxWidth:500,margin:"0 auto",paddingBottom:52,background:C.bg,display:page==="swipe"?"flex":"block",flexDirection:"column",overflow:page==="swipe"?"hidden":"visible"}},
       page==="swipe"&&h(F,null,
         h("div",{style:{padding:"6px 16px 8px",display:"flex",alignItems:"center",justifyContent:"space-between"}},
           h("div",null,h("h1",{style:{fontSize:34,fontWeight:800,letterSpacing:-1,lineHeight:1}},"PetFinder"),
